@@ -1,0 +1,12 @@
+[requires]
+python_version = "3.13"
+
+[packages]
+fastapi = ">=0.110"
+uvicorn = ">=0.23"
+gunicorn = ">=21.2"
+SQLAlchemy = ">=2.0"
+asyncpg = ">=0.29"
+
+[dev-packages]
+openapi-spec-validator = ">=0.7"

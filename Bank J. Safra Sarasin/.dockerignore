@@ -1,0 +1,22 @@
+# VCS
+.git
+.gitignore
+
+# Python
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/.venv
+**/venv
+
+# OS / misc
+**/.DS_Store
+**/Thumbs.db
+
+# Node
+**/node_modules
+
+# Logs
+**/*.log

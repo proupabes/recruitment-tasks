@@ -1,0 +1,449 @@
+# Plik YAML z domyślnymi wartościami.
+# Wszelkie adresy URL są przykładowe tak samo jak hasła.
+# Warto nadpisać newrealgiczne dane uwierzytelniające jeśli są używane w konkretnym ustawieniu komponentów.
+
+## Wartości dla ConfigMap i dla Secret
+global:
+  # Wartości używane w całej paczce Helm.
+  # Domyślna nazwa przestrzeni nazw. Jej nazwa nie jest istotna.
+  namespace: api
+  # Dystrybucje Kubernetes
+  kubernetesDistro:
+    # Wartość określająca czy paczka Helm jest instalowana na OpenShift.
+    # Od tej wartości zależy włączenie lub nie pewnych właściwości.
+    openshift: false
+  apiConfig:
+    database:
+      url: postgresql+asyncpg://postgres:postgres@postgres.api.svc.cluster.local/devicesdb
+    logLevel: INFO
+
+statistics-api:
+  enabled: true
+  replicaCount: 1
+
+  ## Wartości dla ConfigMap i dla Secret.
+  deviceApi:
+    # Adres serwisu wewnątrz klastra Kubernetes do
+    url: http://device-registration-api.api.svc.cluster.local
+
+
+  # PodDisruptionBudget
+  pdb:
+    enabled: true
+
+  podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1001
+      #runAsGroup: 0
+      #fsGroup: 0
+      fsGroupChangePolicy: "OnRootMismatch"
+      seccompProfile:
+        type: RuntimeDefault
+
+    # Security context for container
+  securityContext:
+    allowPrivilegeEscalation: false
+    # When true there is bug for todo FileNotFoundError: [Errno 2] No usable temporary directory found in ['/tmp', '/var/tmp', '/usr/tmp', '/app']
+    readOnlyRootFilesystem: false
+    runAsUser: 1001
+    #runAsGroup: 0
+    capabilities:
+      drop:
+        - all
+        - ALL
+
+  image:
+    repository: docker.io/priunioery/statistics-api
+    pullPolicy: Always
+    tag: "0.0.2"
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  # Port/ports from Dockerfile via EXPOSED
+  container:
+    port: 8000
+
+  # On clean install we using 400Mi RAM / 20m CPU
+  resources:
+    requests:
+      memory: "450Mi"
+      cpu: "10m"
+    limits:
+      memory: "950Mi"
+      cpu: "450m"
+
+  ingress:
+    enabled: true
+    annotations:
+      # https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/
+      # Type of Ingress
+      #kubernetes.io/ingress.class: "azure-application-gateway"
+      #kubernetes.io/ingress.class: "nginx"
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+      nginx.ingress.kubernetes.io/rewrite-target: /$1
+      nginx.ingress.kubernetes.io/enable-cors: "true"
+      nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS, HEAD"
+      nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+      nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+      #nginx.ingress.kubernetes.io/cors-allow-headers: "*"*"
+      nginx.ingress.kubernetes.io/cors-max-age: "3600"
+      # Konfiguracja Nagłówka Referrer Policy
+      #nginx.ingress.kubernetes.io/set-referrer-policy: "same-origin"
+      # Nagłówki odnośnie zagnieźdzeń
+      #nginx.ingress.kubernetes.io/frame-options="SAMEORIGIN"
+      nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
+      nginx.ingress.kubernetes.io/use-regex: "true"
+      #nginx.ingress.kubernetes.io/ssl-ciphers: "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_CCM_SHA256"
+      # Disable for cert test
+      cert-manager.io/cluster-issuer: letsencrypt
+      # Ustawianie Timeout'ów (milisekundy)
+      nginx.ingress.kubernetes.io/proxy-connect-timeout: "60000"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "60000"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "60000"
+      # Ochrona przed SQL Injection i Inne Ataki (Nginx Ingress Controller)
+      nginx.ingress.kubernetes.io/enable-modsecurity: "true"
+      nginx.ingress.kubernetes.io/enable-owasp-core-rules: "true"
+      nginx.ingress.kubernetes.io/ssl-verify-client: "optional_no_ca"
+      nginx.ingress.kubernetes.io/proxy-set-headers: "X-SSL-CERT=$ssl_client_cert;"
+      nginx.ingress.kubernetes.io/auth-tls-verify-client: "optional_no_ca"
+      # Specify the verification depth in the client certificates chain
+      nginx.ingress.kubernetes.io/auth-tls-verify-depth: "2"
+      # Specify an error page to be redirected to verification errors
+      # Specify if certificates are passed to upstream server
+      nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true"
+    tls:
+      - hosts:
+          - bankjsafrasarasin-api.polandcentral.cloudapp.azure.com
+        secretName: api-tls
+    hosts:
+      - host: bankjsafrasarasin-api.polandcentral.cloudapp.azure.com
+        paths:
+         - "/statistics-api/(.*)"
+
+  # Autoscaling for this chart
+  autoscaling:
+    enabled: false
+    # HorizontalPodAutoscaler
+    hpa:
+      enabled: false
+      # Replicas
+      minReplicas: 1
+      maxReplicas: 1
+      # CPU / Memory
+      targetCPUUtilizationPercentage: 89
+      targetMemoryUtilizationPercentage: 89
+      # For Scale Down
+      scaleDownStabilizationWindowSeconds: 300
+      scaleDownPoliciesPercent: 100
+      scaleDownPoliciesPeriodSeconds: 15
+      # For Scale Up
+      scaleUpStabilizationWindowSeconds: 0
+      scaleUpPoliciesPercent: 100
+      scaleUpPoliciesPercentPeriodSeconds: 15
+      scaleUpPoliciesPods: 4
+      scaleUpPoliciesPodPeriodSeconds: 15
+    # Vertical Pod Autoscaler should not be used with the Horizontal Pod Autoscaler (HPA)
+    # on CPU or memory at this moment.
+    vpa:
+      enabled: true
+      # CPU / Memory
+      minCPU: "5m"
+      minMemory: "150Mi"
+      maxCPU: "500m"
+      maxMemory: "1000Mi"
+    # Recommend not to combine using KEDA’s ScaledObject with a Horizontal Pod Autoscaler (HPA) to scale the same workload.
+    keda:
+      enabled: false
+
+  # nodeSelector:
+  #   agentpool: workers
+
+  serviceAccount:
+    create: false
+
+
+  # This is healthy check for API
+  # livenessProbe:
+  #   httpGet:
+  #     httpHeaders:
+  #       - name: Custom-Header
+  #         value: Helm liveness probe
+  #     path: /
+  #     port: 8080
+  #   failureThreshold: 5
+  #   successThreshold: 3
+  #   initialDelaySeconds: 20
+  #   periodSeconds: 10
+  #   timeoutSeconds: 3
+
+  # startupProbe:
+  #   httpGet:
+  #     httpHeaders:
+  #       - name: Custom-Header
+  #         value: Helm liveness probe
+  #     path: /
+  #     port: 8080
+  #   failureThreshold: 30
+  #   periodSeconds: 15
+
+  # readinessProbe:
+  #   httpGet:
+  #     httpHeaders:
+  #       - name: Custom-Header
+  #         value: Helm readiness probe
+  #     path: /
+  #     port: 8080
+  #   failureThreshold: 5
+  #   successThreshold: 3
+  #   initialDelaySeconds: 40
+  #   periodSeconds: 10
+  #   timeoutSeconds: 3
+
+device-registration-api:
+  enabled: true
+  replicaCount: 1
+
+  # PodDisruptionBudget
+  pdb:
+    enabled: true
+
+  podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1001
+      #runAsGroup: 1000
+      #fsGroup: 1000
+      fsGroupChangePolicy: "OnRootMismatch"
+      seccompProfile:
+        type: RuntimeDefault
+
+    # Security context for container
+  securityContext:
+    allowPrivilegeEscalation: false
+    # When true there is bug for todo FileNotFoundError: [Errno 2] No usable temporary directory found in ['/tmp', '/var/tmp', '/usr/tmp', '/app']
+    readOnlyRootFilesystem: false
+    runAsUser: 1001
+    #runAsGroup: 1000
+    capabilities:
+      drop:
+        - all
+        - ALL
+
+  image:
+    repository: docker.io/priunioery/device-registration-api
+    pullPolicy: Always
+    tag: "0.0.2"
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  # Port/ports from Dockerfile via EXPOSED
+  container:
+    port: 8001
+
+  # On clean install we using 300Mi RAM / 30m CPU
+  resources:
+    requests:
+      memory: "300Mi"
+      cpu: "10m"
+    limits:
+      memory: "900Mi"
+      cpu: "500m"
+
+  # Autoscaling for this chart
+  autoscaling:
+    enabled: false
+    # HorizontalPodAutoscaler
+    hpa:
+      enabled: false
+      # Replicas
+      minReplicas: 1
+      maxReplicas: 2
+      # CPU / Memory
+      targetCPUUtilizationPercentage: 89
+      targetMemoryUtilizationPercentage: 89
+      # For Scale Down
+      scaleDownStabilizationWindowSeconds: 300
+      scaleDownPoliciesPercent: 100
+      scaleDownPoliciesPeriodSeconds: 15
+      # For Scale Up
+      scaleUpStabilizationWindowSeconds: 0
+      scaleUpPoliciesPercent: 100
+      scaleUpPoliciesPercentPeriodSeconds: 15
+      scaleUpPoliciesPods: 4
+      scaleUpPoliciesPodPeriodSeconds: 15
+    # Vertical Pod Autoscaler should not be used with the Horizontal Pod Autoscaler (HPA)
+    # on CPU or memory at this moment.
+    vpa:
+      enabled: true
+      # CPU / Memory
+      minCPU: "5m"
+      minMemory: "150Mi"
+      maxCPU: "500m"
+      maxMemory: "950Mi"
+    # Recommend not to combine using KEDA’s ScaledObject with a Horizontal Pod Autoscaler (HPA) to scale the same workload.
+    keda:
+      enabled: false
+
+  # nodeSelector:
+  #   agentpool: workers
+
+  serviceAccount:
+    create: false
+
+  # livenessProbe:
+  #   tcpSocket:
+  #     port: 8080
+  #   failureThreshold: 5
+  #   successThreshold: 3
+  #   initialDelaySeconds: 30
+  #   periodSeconds: 10
+  #   timeoutSeconds: 3
+
+  # startupProbe:
+  #   httpGet:
+  #     httpHeaders:
+  #       - name: Custom-Header
+  #         value: Helm liveness probe
+  #     path: /
+  #     port: 8080
+  #   failureThreshold: 30
+  #   periodSeconds: 15
+
+  # readinessProbe:
+  #   tcpSocket:
+  #     port: 8080
+  #   failureThreshold: 5
+  #   successThreshold: 3
+  #   initialDelaySeconds: 60
+  #   periodSeconds: 10
+  #   timeoutSeconds: 3
+
+postgres:
+  enabled: true
+  replicaCount: 1
+
+  ## Wartości dla ConfigMap i dla Secret.
+  postgres:
+    database: "devicesdb"
+    hostAuthMethod: "trust"
+    user: "postgres"
+    password: "postgres"
+
+
+  # PodDisruptionBudget
+  pdb:
+    enabled: true
+
+  podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 70 # postgres
+      runAsGroup: 70
+      fsGroup: 70
+      seccompProfile:
+        type: RuntimeDefault
+
+  # Security context for container
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop:
+        - all
+        - ALL
+
+  image:
+    repository: postgres
+    pullPolicy: IfNotPresent
+    tag: "15.4-alpine3.17"
+
+  service:
+    type: ClusterIP
+    port: 5432
+
+  # Port/ports from Dockerfile via EXPOSED
+  container:
+    port: 5432
+
+  # On clean install we using 200Mi RAM / 60m CPU
+  resources:
+    requests:
+      memory: "150Mi"
+      cpu: "50m"
+    limits:
+      memory: "900Mi"
+      cpu: "550m"
+
+  ingress:
+    enabled: false
+
+  # Autoscaling for this chart
+  autoscaling:
+    enabled: false
+    # HorizontalPodAutoscaler
+    hpa:
+      enabled: false
+      # Replicas
+      minReplicas: 1
+      maxReplicas: 1
+      # CPU / Memory
+      targetCPUUtilizationPercentage: 89
+      targetMemoryUtilizationPercentage: 89
+      # For Scale Down
+      scaleDownStabilizationWindowSeconds: 300
+      scaleDownPoliciesPercent: 100
+      scaleDownPoliciesPeriodSeconds: 15
+      # For Scale Up
+      scaleUpStabilizationWindowSeconds: 0
+      scaleUpPoliciesPercent: 100
+      scaleUpPoliciesPercentPeriodSeconds: 15
+      scaleUpPoliciesPods: 4
+      scaleUpPoliciesPodPeriodSeconds: 15
+    # Vertical Pod Autoscaler should not be used with the Horizontal Pod Autoscaler (HPA)
+    # on CPU or memory at this moment.
+    vpa:
+      enabled: true
+      # CPU / Memory
+      minCPU: "25m"
+      minMemory: "70Mi"
+      maxCPU: "680m"
+      maxMemory: "1100Mi"
+    # Recommend not to combine using KEDA’s ScaledObject with a Horizontal Pod Autoscaler (HPA) to scale the same workload.
+    keda:
+      enabled: false
+
+  # nodeSelector:
+  #   agentpool: workers
+
+  serviceAccount:
+    create: false
+
+  livenessProbe:
+    exec:
+      command: ["psql", "-w", "-U", "camunda", "-d", "process-engine", "-c", "SELECT 1"]
+    failureThreshold: 5
+    successThreshold: 3
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    timeoutSeconds: 3
+
+# startupProbe:
+#   httpGet:
+#     httpHeaders:
+#       - name: Custom-Header
+#         value: Helm liveness probe
+#     path: /
+#     port: 8080
+#   failureThreshold: 30
+#   periodSeconds: 15
+
+  readinessProbe:
+    exec:
+      command: ["psql", "-w", "-U", "camunda", "-d", "process-engine", "-c", "SELECT 1"]
+    failureThreshold: 5
+    successThreshold: 3
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 3

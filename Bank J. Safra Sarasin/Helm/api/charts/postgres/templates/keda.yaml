@@ -1,0 +1,26 @@
+{{- if .Values.enabled -}}
+{{- if .Values.autoscaling.keda.enabled }}
+apiVersion: keda.sh/v1
+kind: ScaledJob
+metadata:
+    namespace: {{ .Values.global.namespace }}
+    name: {{ include "postgres.fullname" . }}
+spec:
+    jobTargetRef:
+        parallelism: 1
+        completions: 1
+        activeDeadlineSeconds: 600
+        backoffLimit: 6
+        template:
+    pollingInterval: 30                     #  <--- spec.cooldownPeriod and spec.minReplicaCount are not needed
+    successfulJobsHistoryLimit: 5           #  <--- property is added
+    failedJobsHistoryLimit: 5               #  <--- Property is added
+    maxReplicaCount: 100
+    envSourceContainerName: {{ .Chart.Name }}
+    triggers:
+    - type: cpu
+    metadata:
+        type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+        value: "90"
+{{- end }}
+{{- end }}

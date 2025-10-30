@@ -1,0 +1,33 @@
+{{- if not .Values.global.kubernetesDistro.openshift -}}
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: "simple-mem-cpu-{{ .Values.global.namespace }}"
+  namespace: {{ .Values.global.namespace }}
+spec:
+    hard:
+        resourcequotas: "17"
+        # CPU / Memory
+        requests.cpu: "14"
+        requests.memory: "15Gi"
+        limits.cpu: "100"
+        limits.memory: "150Gi"
+        # Storage
+        requests.storage: "25Gi"
+        persistentvolumeclaims: "10"
+        # Ephemeral storage
+        requests.ephemeral-storage: "20Gi"
+        limits.ephemeral-storage: "30Gi"
+        # Configmaps
+        configmaps: "30"
+        # Pods
+        pods: "80"
+        # Replica
+        replicationcontrollers: "40"
+        # Services
+        services: "25"
+        services.loadbalancers: "20"
+        services.nodeports: "35"
+        # Secrets
+        secrets: "40"
+{{- end }}

@@ -1,0 +1,26 @@
+{{- if and (not .Values.global.kubernetesDistro.openshift) .Values.enabled .Values.autoscaling.vpa.enabled -}}
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  namespace: {{ .Values.global.namespace }}
+  name: {{ include "device-registration-api.fullname" . }}
+  labels:
+    {{- include "device-registration-api.labels" . | nindent 4 }}
+spec:
+  targetRef:
+    apiVersion: "apps/v1"
+    kind: Deployment
+    name: {{ include "device-registration-api.fullname" . }}
+  updatePolicy:
+    updateMode: "Auto"
+  resourcePolicy:
+    containerPolicies:
+      - containerName: '*'
+        minAllowed:
+          cpu: {{ .Values.autoscaling.vpa.minCPU }}
+          memory: {{ .Values.autoscaling.vpa.minMemory }}
+        maxAllowed:
+          cpu: {{ .Values.autoscaling.vpa.maxCPU }}
+          memory: {{ .Values.autoscaling.vpa.maxMemory }}
+        controlledResources: ["cpu", "memory"]
+{{- end }}

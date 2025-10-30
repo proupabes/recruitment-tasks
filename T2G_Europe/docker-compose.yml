@@ -1,0 +1,59 @@
+version: '3.9'
+
+x-logging:
+  &default-logging
+  options:
+    max-size: "5m"
+    max-file: "3"
+    compress: true
+  driver: json-file
+
+networks:
+  wordpress-net:
+
+services:
+  wordpress:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wordpress
+    restart: unless-stopped
+    ports:
+      - 8080:80
+      - 8081:443
+    networks:
+      - wordpress-net
+    tty: true
+
+  db:
+    image: docker.io/mysql:8.0.32-debian
+    container_name: wordpress-db
+    restart: unless-stopped
+    networks:
+      - wordpress-net
+    environment:
+      MYSQL_DATABASE: exampledb
+      MYSQL_USER: exampleuser
+      MYSQL_PASSWORD: examplepass
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    security_opt:
+      - seccomp:unconfined
+    #cap_add:
+    #  - SYS_NICE
+    tty: true
+
+  phpmyadmin:
+    image: docker.io/phpmyadmin:5.2.1-apache
+    container_name: phpmyadmin
+    restart: unless-stopped
+    ports:
+      - 9000:80
+    networks:
+      - wordpress-net
+    environment:
+      PMA_ARBITRARY: '1'
+      PMA_HOST: wordpress-db
+      PMA_USER: exampleuser
+      PMA_PASSWORD: examplepass
+    tty: true
+

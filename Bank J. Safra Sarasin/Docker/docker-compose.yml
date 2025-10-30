@@ -1,0 +1,116 @@
+x-logging:
+  &default-logging
+  options:
+    max-size: "20m"
+    max-file: "5"
+  driver: json-file
+
+name: apps
+
+services:
+  # API components
+  statistics-api:
+    container_name: statistics-api
+    hostname: statistics-api
+    build:
+      context: ..
+      dockerfile: applications/statistics_api/Dockerfile
+    annotations:
+      com.bankjsafrasarasin.statistics-api.description: "Public API."
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/devicesdb
+      DEVICE_API_URL: http://device-registration-api:8001
+      LOG_LEVEL: INFO
+    ports:
+      - name: "public"
+        target: "8000"
+        published: "8000"
+    networks:
+      - ksef-net
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+    #   device-registration-api:
+    #     condition: service_healthy
+    # healthcheck:
+    #   test: ["CMD", "python", "-c", "import sys,urllib.request; sys.exit(0) if urllib.request.urlopen('http://localhost:8000/readyz', timeout=3).status<400 else sys.exit(1)"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 30
+    #   start_period: 60s
+    restart: on-failure
+    logging: *default-logging
+    profiles:
+      - ss-api
+      - complete-app
+
+  device-registration-api:
+    container_name: device-registration-api
+    hostname: device-registration-api
+    build:
+      context: ..
+      dockerfile: applications/device_registration_api/Dockerfile
+    annotations:
+      com.bankjsafrasarasin.device-registration-api.description: "Internal API."
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/devicesdb
+      LOG_LEVEL: INFO
+    networks:
+      - ksef-net
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+    # healthcheck:
+    #   test: ["CMD", "python", "-c", "import sys,urllib.request; sys.exit(0) if urllib.request.urlopen('http://localhost:8001/readyz', timeout=3).status<400 else sys.exit(1)"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 30         # więcej podejść
+    #   start_period: 60s   # daj czas, aż DB wstanie i app się zainicjuje
+    restart: on-failure
+    logging: *default-logging
+    profiles:
+      - dr-api
+      - complete-app
+
+  postgres:
+    container_name: postgres
+    hostname: postgres
+    image: postgres:18.0-alpine3.22
+    annotations:
+      com.bankjsafrasarasin.postgres.description: "Database for use by API apps."
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: devicesdb
+    networks:
+      - ksef-net
+    volumes:
+      - type: volume
+        source: postgre_data
+        target: /var/lib/postgresql/data
+    logging: *default-logging
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d devicesdb || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 60
+    profiles:
+      - postgres
+      - complete-app
+
+
+networks:
+  ksef-net:
+    name: apps-net
+    labels:
+      com.docker.network.bridge.name: "apps-net"
+      com.ksef-net.description: "For Bank J. Safra Sarasin API apps."
+      com.ksef-net.department: "Finance"
+      com.ksef-net.team: "IT Team"
+      com.ksef-net.company: "Bank J. Safra Sarasin"
+      com.ksef-net.website: "https://jsafrasarasin.com/"
+    attachable: false
+
+volumes:
+  postgre_data: {}

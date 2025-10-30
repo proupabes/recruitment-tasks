@@ -1,0 +1,52 @@
+{{- if .Values.enabled -}}
+{{- if .Values.autoscaling.hpa.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  namespace: {{ .Values.global.namespace }}
+  name: {{ include "statistics-api.fullname" . }}
+  labels:
+    {{- include "statistics-api.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "statistics-api.fullname" . }}
+  minReplicas: {{ .Values.autoscaling.hpa.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.hpa.maxReplicas }}
+  metrics:
+    {{- if .Values.autoscaling.hpa.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.hpa.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.autoscaling.hpa.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.hpa.targetMemoryUtilizationPercentage }}
+    {{- end }}
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: {{ .Values.autoscaling.hpa.scaleDownStabilizationWindowSeconds }}
+      policies:
+      - type: Percent
+        value: {{ .Values.autoscaling.hpa.scaleDownPoliciesPercent }}
+        periodSeconds: {{ .Values.autoscaling.hpa.scaleDownPoliciesPeriodSeconds }}
+    scaleUp:
+      stabilizationWindowSeconds: {{ .Values.autoscaling.hpa.scaleUpStabilizationWindowSeconds }}
+      policies:
+      - type: Percent
+        value: {{ .Values.autoscaling.hpa.scaleUpPoliciesPercent }}
+        periodSeconds: {{ .Values.autoscaling.hpa.scaleUpPoliciesPercentPeriodSeconds }}
+      - type: Pods
+        value: {{ .Values.autoscaling.hpa.scaleUpPoliciesPods }}
+        periodSeconds: {{ .Values.autoscaling.hpa.scaleUpPoliciesPodPeriodSeconds }}
+      selectPolicy: Max
+{{- end }}
+{{- end }}

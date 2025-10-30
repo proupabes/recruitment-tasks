@@ -1,0 +1,1 @@
+The purpose of this application is to send queries to the indicated URLs along with previously generated data.

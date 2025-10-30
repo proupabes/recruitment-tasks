@@ -1,0 +1,25 @@
+AGENT_LABEL='docker_worker'
+
+pipeline {
+    agent { label "${AGENT_LABEL}" }
+    options {
+        ansiColor('xterm')
+    }
+
+    stages {
+
+        stage('Build Docker image') {
+            steps {
+                echo 'Building....'
+                sh """ docker build . -t recruitment-tasks.azurecr.io/scramjet:first """
+            }
+        }
+        stage('Publish Docker image') {
+            steps {
+                echo 'Publishing....'
+                // Of course, the Docker must be logged into the repository
+                sh """ docker image push --all-tags recruitment-tasks.azurecr.io/scramjet """
+            }
+        }
+    }
+}

@@ -1,0 +1,38 @@
+{{- if .Values.enabled -}}
+{{- if .Values.autoscaling.keda.enabled }}
+apiVersion: keda.sh/v1
+kind: ScaledJob
+metadata:
+    namespace: {{ .Values.global.namespace }}
+    name: {{ include "statistics-api.fullname" . }}
+spec:
+    jobTargetRef:
+        parallelism: 1
+        completions: 1
+        activeDeadlineSeconds: 600
+        backoffLimit: 6
+        template:
+        # {job template}
+    pollingInterval: 30                     #  <--- spec.cooldownPeriod and spec.minReplicaCount are not needed
+    successfulJobsHistoryLimit: 5           #  <--- property is added
+    failedJobsHistoryLimit: 5               #  <--- Property is added
+    maxReplicaCount: 100
+    envSourceContainerName: {{ .Chart.Name }}
+    triggers:
+    # {list of triggers to create jobs}
+    # - type: http
+    # metadata:
+    #     targetValue: "1"
+    #     apiURL: "http://statistics-api:8080/"
+    #     metricName: "luck"
+    - type: cpu
+    metadata:
+        # Required
+        type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+        value: "90"
+    # - type: memory
+    # metadata:
+    #     type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+    #     value: "50"
+{{- end }}
+{{- end }}

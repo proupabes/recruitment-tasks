@@ -1,0 +1,85 @@
+{
+	// See https://go.microsoft.com/fwlink/?LinkId=827846 to learn about workspace recommendations.
+	// Extension identifier format: ${publisher}.${name}. Example: vscode.csharp
+
+	// List of extensions which should be recommended for users of this workspace.
+	"recommendations": [
+		// Base
+		"aaron-bond.better-comments",
+		"bungcip.better-toml",
+		"coenraads.bracket-pair-colorizer-2",
+		"usernamehw.errorlens",
+		"sleistner.vscode-fileutils",
+		"oderwat.indent-rainbow",
+		"yzhang.markdown-all-in-one",
+		"christian-kohler.path-intellisense",
+		"johnpapa.vscode-peacock",
+		"esbenp.prettier-vscode",
+		"alefragnani.project-manager",
+		"wayou.vscode-todo-highlight",
+		"vscode-icons-team.vscode-icons",
+		"redhat.vscode-yaml",
+		"gruntfuggly.todo-tree",
+		"formulahendry.code-runner",
+		"alefragnani.bookmarks",
+		"hookyqr.beautify",
+		"tyriar.sort-lines",
+		"mikestead.dotenv",
+		"sourcegraph.sourcegraph",
+		"mintlify.document",
+		"bierner.docs-view",
+		"anseki.vscode-color",
+		"wwm.better-align",
+		"xyz.local-history",
+		"idleberg.icon-fonts",
+		"grapecity.gc-excelviewer",
+		"bierner.markdown-mermaid",
+		"tomoki1207.pdf",
+		"yzane.markdown-pdf",
+		"wmaurer.change-case",
+		"jock.svg",
+		"janne252.fontawesome-autocomplete",
+		"lukas-tr.materialdesignicons-intellisense",
+		"hediet.vscode-drawio",
+		"ms-vscode.hexeditor",
+		"shardulm94.trailing-spaces",
+		"mathpix.vscode-mathpix-markdown",
+		"randomfractalsinc.vscode-data-preview",
+		"qcz.text-power-tools",
+		"foxundermoon.shell-format",
+		"emilast.logfilehighlighter",
+		"editorconfig.editorconfig",
+		"mechatroner.rainbow-csv",
+		"vscode-snippet.snippet",
+		"mercedes-benz.sechub",
+		// Container
+		"ms-azuretools.vscode-docker",
+		"ms-kubernetes-tools.vscode-kubernetes-tools",
+		"bbenoist.vagrant",
+		"redhat.vscode-openshift-connector",
+		"foxundermoon.shell-format",
+		"nocalhost.nocalhost",
+		// Git
+		"waderyan.gitblame",
+		"mhutchie.git-graph",
+		"donjayamanne.githistory",
+		"eamodio.gitlens",
+		"codestream.codestream",
+		"codezombiech.gitignore",
+		"vivaxy.vscode-conventional-commits",
+		"arturock.gitstash",
+		"buianhthang.gitflow",
+		"gitlab.gitlab-workflow",
+		"felipecaputo.git-project-manager",
+		"ahmadawais.emoji-log-vscode",
+		"shyykoserhiy.git-autoconfig",
+		"carlocardella.vscode-virtualrepos",
+		// Doc
+		"adpyke.codesnap",
+		"vsls-contrib.codetour"
+	],
+	// List of extensions recommended by VS Code that should not be recommended for users of this workspace.
+	"unwantedRecommendations": [
+		
+	]
+}

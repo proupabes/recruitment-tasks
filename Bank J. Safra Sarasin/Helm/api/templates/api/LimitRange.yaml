@@ -1,0 +1,38 @@
+{{- if not .Values.global.kubernetesDistro.openshift -}}
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: "simple-cpu-resource-constraint-{{ .Values.global.namespace }}"
+  namespace: {{ .Values.global.namespace }}
+spec:
+  limits:
+  - type: Container
+    default:
+      cpu: "50m"
+      memory: "1500Mi"
+    defaultRequest:
+      cpu: "50m"
+      memory: "50Mi"
+    max:
+      cpu: "4"
+      memory: "4000Mi"
+    min:
+      cpu: "1m"
+      memory: "1Mi"
+    maxLimitRequestRatio:
+      cpu: "200"
+  - type: Pod
+    max:
+      cpu: "4"
+      memory: "4000Mi"
+    min:
+      cpu: "1m"
+      memory: "1Mi"
+    maxLimitRequestRatio:
+      cpu: "200"
+  - type: PersistentVolumeClaim
+    max:
+      storage: "20Gi"
+    min:
+      storage: "1Mi"
+{{- end }}

@@ -1,0 +1,246 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "StatisticsAPI",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/Log/auth": {
+      "post": {
+        "summary": "Log Auth",
+        "description": "Receive a login event, enrich it (normalize device, UA/IP), forward to DeviceRegistrationAPI,\nand respond with required schema.",
+        "operationId": "log_auth_Log_auth_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginEvent"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Log/auth/statistics": {
+      "get": {
+        "summary": "Get Statistics",
+        "description": "Return the count of registrations for a given deviceType (normalized).\nUses direct SQL COUNT for robustness. Never 400 for unknown device types:\nthey normalize to 'Unknown' and return 0 if not present.",
+        "operationId": "get_statistics_Log_auth_statistics_get",
+        "parameters": [
+          {
+            "name": "deviceType",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 50,
+              "title": "Devicetype"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatisticsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/livez": {
+      "get": {
+        "summary": "Livez",
+        "description": "Liveness: process is responsive.",
+        "operationId": "livez_livez_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/startupz": {
+      "get": {
+        "summary": "Startupz",
+        "description": "Startup: set when lifespan finished initial checks.",
+        "operationId": "startupz_startupz_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/readyz": {
+      "get": {
+        "summary": "Readyz",
+        "description": "Readiness: DB connectivity + schema + DeviceRegistrationAPI readiness.",
+        "operationId": "readyz_readyz_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/healthz": {
+      "get": {
+        "summary": "Healthz",
+        "description": "Back-compat alias -> readiness.",
+        "operationId": "healthz_healthz_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LoginEvent": {
+        "properties": {
+          "userKey": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Userkey"
+          },
+          "deviceType": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Devicetype"
+          }
+        },
+        "type": "object",
+        "required": [
+          "userKey",
+          "deviceType"
+        ],
+        "title": "LoginEvent"
+      },
+      "StatisticsResponse": {
+        "properties": {
+          "deviceType": {
+            "type": "string",
+            "title": "Devicetype"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "deviceType",
+          "count"
+        ],
+        "title": "StatisticsResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

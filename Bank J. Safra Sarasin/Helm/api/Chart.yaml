@@ -1,0 +1,29 @@
+apiVersion: v2
+name: api
+description: A Helm chart for Bank J. Safra Sarasin kubernetes for run API.
+home: https://jsafrasarasin.com/
+
+annotations:
+  "artifacthub.io/links": |
+    - name: Chart Source
+      url: https://codeberg.org/ubrapu/recruitment-tasks
+
+
+type: application
+version: 0.0.1
+appVersion: "0.0.1"
+
+dependencies:
+  - name: device-registration-api
+    version: 0.0.1
+    repository: "file://charts/device-registration-api"
+  - name: statistics-api
+    version: 0.0.1
+    repository: "file://charts/statistics-api"
+  - name: postgres
+    version: 0.0.1
+    repository: "file://charts/postgres"
+
+sources:
+  - https://codeberg.org/ubrapu/recruitment-tasks
+

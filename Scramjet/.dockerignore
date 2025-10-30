@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log
+Dockerfile
+README.md
+Jenkinsfile
+devops_tasks_eng.pdf
+deploy
+screenshots
+docker-data
+app
