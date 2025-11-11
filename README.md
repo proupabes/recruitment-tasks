@@ -8,3 +8,4 @@ Recruitment tasks for companies:
 | [Scramjet](Scramjet/README.md) | Docker, Helm, Jenkins |  |  |
 | [Svarmony](Svarmony/README.md) | Docker | Programming (Go, C++) |  |
 | [T2G Europe](T2G_Europe/README.md) | Docker |  |  |
+| [Bank J. Safra Sarasin](Bank_J_Safra_Sarasin/README.md) | Docker, Helm, Kubernetes, Python | DevOps, Programming | OpenAPI |
